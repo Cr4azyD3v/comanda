@@ -1,0 +1,348 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: FM BAR comanda API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: menu
+  - name: tabs
+  - name: history
+  - name: dashboard
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /menu:
+    get:
+      operationId: getMenu
+      tags: [menu]
+      summary: List menu categories with items
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MenuCategory"
+    post:
+      operationId: createMenuItem
+      tags: [menu]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuItemInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MenuItem"
+  /menu/{id}:
+    delete:
+      operationId: deleteMenuItem
+      tags: [menu]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Deleted }
+  /tabs:
+    get:
+      operationId: listTabs
+      tags: [tabs]
+      summary: List active (open or paid) tabs
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tab"
+    post:
+      operationId: createTab
+      tags: [tabs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTabInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tab"
+  /tabs/{id}:
+    get:
+      operationId: getTab
+      tags: [tabs]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tab"
+    delete:
+      operationId: deleteTab
+      tags: [tabs]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Deleted }
+  /tabs/{id}/items:
+    post:
+      operationId: addTabItem
+      tags: [tabs]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddItemInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tab"
+  /tabs/{id}/items/{itemName}:
+    delete:
+      operationId: removeTabItem
+      tags: [tabs]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: path
+          name: itemName
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tab"
+  /tabs/{id}/pay:
+    post:
+      operationId: payTab
+      tags: [tabs]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PayTabInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tab"
+  /tabs/{id}/close:
+    post:
+      operationId: closeTab
+      tags: [tabs]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PayTabInput"
+      responses:
+        "200":
+          description: Closed and archived
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CloseTabResult"
+  /history:
+    get:
+      operationId: listHistory
+      tags: [history]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoryEntry"
+    delete:
+      operationId: clearHistory
+      tags: [history]
+      summary: Delete all history entries
+      responses:
+        "204": { description: Cleared }
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Summary of today's activity
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status: { type: string }
+      required: [status]
+    MenuItem:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        price: { type: number }
+        category: { type: string }
+      required: [id, name, price, category]
+    MenuItemInput:
+      type: object
+      properties:
+        name: { type: string }
+        price: { type: number }
+        category: { type: string }
+      required: [name, price, category]
+    MenuCategory:
+      type: object
+      properties:
+        category: { type: string }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/MenuItem" }
+      required: [category, items]
+    TabItem:
+      type: object
+      properties:
+        name: { type: string }
+        price: { type: number }
+        qty: { type: integer }
+      required: [name, price, qty]
+    Tab:
+      type: object
+      properties:
+        id: { type: string }
+        customer: { type: string }
+        status:
+          type: string
+          enum: [open, paid]
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/TabItem" }
+        total: { type: number }
+        createdAt: { type: string }
+      required: [id, customer, status, items, total, createdAt]
+    CreateTabInput:
+      type: object
+      properties:
+        customer: { type: string }
+      required: [customer]
+    AddItemInput:
+      type: object
+      properties:
+        name: { type: string }
+        price: { type: number }
+      required: [name, price]
+    CloseTabResult:
+      type: object
+      properties:
+        tab: { $ref: "#/components/schemas/Tab" }
+        whatsappMessage: { type: string }
+        whatsappUrl: { type: string }
+      required: [tab, whatsappMessage, whatsappUrl]
+    HistoryEntry:
+      type: object
+      properties:
+        id: { type: string }
+        customer: { type: string }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/TabItem" }
+        total: { type: number }
+        paymentMethod:
+          type: string
+          enum: [dinheiro, credito, debito, pix]
+        closedAt: { type: string }
+      required: [id, customer, items, total, paymentMethod, closedAt]
+    PayTabInput:
+      type: object
+      properties:
+        paymentMethod:
+          type: string
+          enum: [dinheiro, credito, debito, pix]
+      required: [paymentMethod]
+    DashboardTopItem:
+      type: object
+      properties:
+        name: { type: string }
+        qty: { type: integer }
+        revenue: { type: number }
+      required: [name, qty, revenue]
+    Dashboard:
+      type: object
+      properties:
+        openTabs: { type: integer }
+        openValue: { type: number }
+        revenueToday: { type: number }
+        ordersToday: { type: integer }
+        topItems:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardTopItem" }
+      required: [openTabs, openValue, revenueToday, ordersToday, topItems]

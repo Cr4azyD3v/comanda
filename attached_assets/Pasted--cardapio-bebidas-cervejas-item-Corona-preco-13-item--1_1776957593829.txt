@@ -1,0 +1,82 @@
+{
+  "cardapio_bebidas": {
+    "cervejas": [
+      {"item": "Corona", "preco": 13},
+      {"item": "Sem Álcool", "preco": 13},
+      {"item": "Heineken", "preco": 13},
+      {"item": "Stella", "preco": 12},
+      {"item": "Budweiser", "preco": 12}
+    ],
+    "doses": [
+      {"item": "Jack Daniel's", "preco": 32},
+      {"item": "Red/White/Bala", "preco": 24},
+      {"item": "Gin Tanqueray", "preco": 32},
+      {"item": "Gin Comum", "preco": 18},
+      {"item": "Tequila", "preco": 20},
+      {"item": "Tequila José Cuervo", "preco": 26},
+      {"item": "Amarula", "preco": 26},
+      {"item": "Absolut", "preco": 26},
+      {"item": "Vodka Comum", "preco": 18},
+      {"item": "Campari", "preco": 18},
+      {"item": "Domeq", "preco": 12},
+      {"item": "Cachaça + Limão", "preco": 8}
+    ],
+    "drinks_fm_400": [
+      {"item": "Caip Limão ou Morango", "preco": 18},
+      {"item": "Caip Vodka Limão ou Morango", "preco": 24},
+      {"item": "Cuba", "preco": 24},
+      {"item": "Campari Tonic", "preco": 24},
+      {"item": "Gin Tônica", "preco": 26},
+      {"item": "Gin Tônica Tanqueray", "preco": 37},
+      {"item": "Gin/Vodka + Sabores", "preco": 26},
+      {"item": "Jack n Coke", "preco": 36},
+      {"item": "Tanqueray Sabores", "preco": 38},
+      {"item": "Special Tanqueray Taça", "preco": 44},
+      {"item": "Choco FM", "preco": 20},
+      {"item": "Drink Sem Álcool", "preco": 15}
+    ],
+    "copao_fm_700": [
+      {"item": "Gin Rocks", "preco": 36},
+      {"item": "Red", "preco": 36},
+      {"item": "Jack Daniels", "preco": 46},
+      {"item": "Tanqueray", "preco": 46}
+    ],
+    "outras_bebidas": [
+      {"item": "Beats/Ice/GT Long", "preco": 17},
+      {"item": "Beats/Ice/GT Lata", "preco": 15},
+      {"item": "Red Bull", "preco": 17},
+      {"item": "Xeque Mate", "preco": 17},
+      {"item": "Água 500ml", "preco": 5},
+      {"item": "Refri Lata", "preco": 7},
+      {"item": "Suco Tial", "preco": 7},
+      {"item": "H2O", "preco": 7},
+      {"item": "Gatorade", "preco": 7}
+    ],
+    "diversos": [
+      {"item": "Cigarro", "preco_unitario": 2, "preco_tres": 5},
+      {"item": "Porto", "preco_unitario": 3, "preco_dois": 5},
+      {"item": "Pirulito", "preco": 1},
+      {"item": "Halls", "preco": 5},
+      {"item": "Trident", "preco": 5},
+      {"item": "Paçoca", "preco": 2},
+      {"item": "Chocolate", "preco": 6},
+      {"item": "Isqueiro", "preco": 5}
+    ]
+  },
+  "cardapio_comida": {
+    "porcoes": [
+      {"item": "Fritas Simples", "preco": 35},
+      {"item": "Fritas Plus", "preco": 45},
+      {"item": "Batata Rústica com Bacon", "preco": 45},
+      {"item": "Snack Frango Crispy FM", "preco": 60}
+    ],
+    "burgers": [
+      {"nome": "01 FM Burger", "preco": 20},
+      {"nome": "02 FM Egg Burger", "preco": 24},
+      {"nome": "03 FM Bacon Burger", "preco": 28},
+      {"nome": "04 FM Egg Bacon Burger", "preco": 32},
+      {"nome": "05 FM Chicken Crispy", "preco": 28},
+      {"nome": "06 FM Chicken Crisp Bacon", "preco": 32}
+    ]
+  }
+}

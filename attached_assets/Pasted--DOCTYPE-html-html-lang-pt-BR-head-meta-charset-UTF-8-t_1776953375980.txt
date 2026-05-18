@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>FM Comanda</title>
+
+<style>
+body {
+  margin:0;
+  font-family: Arial;
+  background:#0a0f0c;
+  color:#fff;
+}
+
+.header {
+  background:#00ff88;
+  color:#000;
+  padding:15px;
+  font-size:20px;
+  font-weight:bold;
+  text-align:center;
+}
+
+.container {
+  padding:10px;
+}
+
+.categoria {
+  margin-top:15px;
+  font-size:18px;
+  font-weight:bold;
+}
+
+.grid {
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:10px;
+  margin-top:10px;
+}
+
+.item {
+  background:#121a14;
+  border:1px solid #00ff88;
+  border-radius:10px;
+  padding:15px;
+  text-align:center;
+  cursor:pointer;
+}
+
+.item:hover {
+  background:#1c2a20;
+}
+
+.comanda {
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:#000;
+  border-top:2px solid #00ff88;
+  padding:10px;
+}
+
+button {
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  border:none;
+  border-radius:6px;
+  background:#00ff88;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">🍺 FM BAR</div>
+<div class="container" id="app"></div>
+
+<div class="comanda">
+  Total: R$ <span id="total">0</span>
+  <button onclick="fechar()">Fechar + WhatsApp</button>
+  <button onclick="pagar()">Marcar Pago</button>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+  getFirestore, doc, getDoc,
+  collection, addDoc, onSnapshot, updateDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB9tWpu2AiJjy3e0sDbrG8SRKuznWXZO",
+  authDomain: "fm-dance-bar.firebaseapp.com",
+  projectId: "fm-dance-bar",
+  storageBucket: "fm-dance-bar.firebasestorage.app",
+  messagingSenderId: "897631964586",
+  appId: "1:897631964586:web:6acfcce285823d58d2ef63",
+  measurementId: "G-M5X7B3HM6"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let atual = null;
+
+// CARDÁPIO (EDITA AQUI DEPOIS)
+const cardapio = {
+  bebidas: [
+    { nome:"Cerveja", preco:10 },
+    { nome:"Heineken", preco:15 },
+    { nome:"Corona", preco:18 }
+  ],
+  combos: [
+    { nome:"Combo Whisky", preco:120 },
+    { nome:"Combo Vodka", preco:100 }
+  ]
+};
+
+// LOGIN
+async function login(){
+  const email = prompt("Email:");
+  const senha = prompt("Senha:");
+  await signInWithEmailAndPassword(auth,email,senha);
+}
+
+// AUTH
+onAuthStateChanged(auth, async (user)=>{
+  if(!user) return login();
+
+  const snap = await getDoc(doc(db,"users",user.uid));
+  const data = snap.data();
+
+  if(data.tipo === "funcionario") telaFunc();
+  else telaCliente(user.uid);
+});
+
+// FUNCIONÁRIO
+function telaFunc(){
+
+  document.getElementById("app").innerHTML = `
+    <button onclick="nova()">+ Nova Comanda</button>
+    <div id="lista"></div>
+
+    <div class="categoria">🍺 Bebidas</div>
+    <div class="grid">
+      ${cardapio.bebidas.map(i=>`
+        <div class="item" onclick="add('${i.nome}',${i.preco})">
+          ${i.nome}<br>R$ ${i.preco}
+        </div>
+      `).join("")}
+    </div>
+
+    <div class="categoria">🔥 Combos</div>
+    <div class="grid">
+      ${cardapio.combos.map(i=>`
+        <div class="item" onclick="add('${i.nome}',${i.preco})">
+          ${i.nome}<br>R$ ${i.preco}
+        </div>
+      `).join("")}
+    </div>
+
+    <div id="consumo"></div>
+  `;
+
+  onSnapshot(collection(db,"comandas"),snap=>{
+    let html="";
+
+    snap.forEach(d=>{
+      const c={id:d.id,...d.data()};
+      html+=`
+        <div class="item" onclick="abrir('${c.id}')">
+          ${c.cliente} (${c.status})
+        </div>
+      `;
+    });
+
+    document.getElementById("lista").innerHTML=html;
+  });
+}
+
+// NOVA
+window.nova = async ()=>{
+  const nome = prompt("Cliente:");
+  await addDoc(collection(db,"comandas"),{
+    cliente:nome,
+    itens:[],
+    status:"aberta"
+  });
+};
+
+// ABRIR
+window.abrir = (id)=>{
+  atual=id;
+
+  onSnapshot(doc(db,"comandas",id),snap=>{
+    const c=snap.data();
+    let total=0;
+    let html="";
+
+    c.itens.forEach(i=>{
+      total+=i.preco*i.qtd;
+
+      html+=`
+        <div class="item">
+          ${i.nome} x${i.qtd}
+          <button onclick="remover('${i.nome}')">-</button>
+        </div>
+      `;
+    });
+
+    document.getElementById("consumo").innerHTML=html;
+    document.getElementById("total").innerText=total;
+  });
+};
+
+// ADD
+window.add = async (nome,preco)=>{
+  if(!atual){
+    alert("Abra uma comanda primeiro");
+    return;
+  }
+
+  const ref=doc(db,"comandas",atual);
+  const snap=await getDoc(ref);
+  const c=snap.data();
+
+  let item=c.itens.find(i=>i.nome===nome);
+
+  if(item) item.qtd++;
+  else c.itens.push({nome,preco,qtd:1});
+
+  await updateDoc(ref,{itens:c.itens});
+};
+
+// REMOVER
+window.remover = async(nome)=>{
+  const ref=doc(db,"comandas",atual);
+  const snap=await getDoc(ref);
+  const c=snap.data();
+
+  let item=c.itens.find(i=>i.nome===nome);
+  if(!item) return;
+
+  item.qtd--;
+
+  if(item.qtd<=0){
+    c.itens=c.itens.filter(i=>i.nome!==nome);
+  }
+
+  await updateDoc(ref,{itens:c.itens});
+};
+
+// PAGAR
+window.pagar = async ()=>{
+  if(!atual) return;
+
+  await updateDoc(doc(db,"comandas",atual),{
+    status:"pago"
+  });
+
+  alert("Pago!");
+};
+
+// FECHAR
+window.fechar = async ()=>{
+  if(!atual) return;
+
+  const ref=doc(db,"comandas",atual);
+  const snap=await getDoc(ref);
+  const c=snap.data();
+
+  let total=0;
+  let msg=`📋 FM BAR\n\n${c.cliente}\n\n`;
+
+  c.itens.forEach(i=>{
+    total+=i.preco*i.qtd;
+    msg+=`${i.nome} x${i.qtd} = R$ ${i.preco*i.qtd}\n`;
+  });
+
+  msg+=`\nTotal: R$ ${total}`;
+
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+
+  await addDoc(collection(db,"historico"),{
+    ...c,
+    total,
+    fechado:new Date().toLocaleDateString()
+  });
+
+  await deleteDoc(ref);
+};
+
+// CLIENTE
+function telaCliente(uid){
+  document.getElementById("app").innerHTML="<h2>Minha Comanda</h2><div id='minha'></div>";
+
+  onSnapshot(collection(db,"comandas"),snap=>{
+    let html="";
+
+    snap.forEach(d=>{
+      const c=d.data();
+
+      if(c.uid===uid){
+        let total=0;
+
+        c.itens.forEach(i=>{
+          total+=i.preco*i.qtd;
+          html+=`<div class="item">${i.nome} x${i.qtd}</div>`;
+        });
+
+        html+=`<h3>Total: R$ ${total}</h3>`;
+      }
+    });
+
+    document.getElementById("minha").innerHTML=html;
+  });
+}
+
+</script>
+
+</body>
+</html>
