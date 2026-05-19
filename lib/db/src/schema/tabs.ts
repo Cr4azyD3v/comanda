@@ -7,11 +7,17 @@ import {
   doublePrecision,
 } from "drizzle-orm/pg-core";
 
-export type TabItem = { name: string; price: number; qty: number };
+export type TabItem = {
+  name: string;
+  price: number;
+  qty: number;
+  addedBy?: string;
+};
 
 export const tabsTable = pgTable("tabs", {
   id: uuid("id").primaryKey().defaultRandom(),
   customer: text("customer").notNull(),
+  openedBy: text("opened_by"),
   status: text("status").notNull().default("open"),
   items: jsonb("items").$type<TabItem[]>().notNull().default([]),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -27,6 +33,7 @@ export const historyTable = pgTable("history", {
   items: jsonb("items").$type<TabItem[]>().notNull().default([]),
   total: doublePrecision("total").notNull(),
   paymentMethod: text("payment_method").notNull().default("dinheiro"),
+  closedBy: text("closed_by"),
   closedAt: timestamp("closed_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
