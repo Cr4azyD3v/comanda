@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Search, Trash2, Check, Send, ListOrdered, ArrowLeft, ShoppingBag, Banknote, CreditCard, Smartphone } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type PaymentMethod = "dinheiro" | "credito" | "debito" | "pix";
 
@@ -17,7 +18,10 @@ const PAYMENT_OPTIONS: { id: PaymentMethod; label: string; icon: React.Component
   { id: "debito", label: "Débito", icon: CreditCard },
   { id: "pix", label: "Pix", icon: Smartphone },
 ];
-import { useToast } from "@/hooks/use-toast";
+
+function getEmployeeName() {
+  return localStorage.getItem("employeeName") || "Desconhecido";
+}
 
 export default function OperatorPage() {
   const [selectedTabId, setSelectedTabId] = useState<string | null>(null);
@@ -43,7 +47,13 @@ export default function OperatorPage() {
 
   const handleCreateTab = () => {
     if (!newCustomerName.trim()) return;
-    createTab.mutate({ data: { customer: newCustomerName } }, {
+
+    createTab.mutate({
+      data: {
+        customer: newCustomerName,
+        openedBy: getEmployeeName(),
+      }
+    }, {
       onSuccess: (newTab) => {
         setSelectedTabId(newTab.id);
         setIsNewTabOpen(false);
@@ -56,7 +66,15 @@ export default function OperatorPage() {
 
   const handleAddItem = (name: string, price: number) => {
     if (!selectedTabId) return;
-    addTabItem.mutate({ id: selectedTabId, data: { name, price } }, {
+
+    addTabItem.mutate({
+      id: selectedTabId,
+      data: {
+        name,
+        price,
+        addedBy: getEmployeeName(),
+      }
+    }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListTabsQueryKey() });
       }
@@ -65,6 +83,7 @@ export default function OperatorPage() {
 
   const handleRemoveItem = (itemName: string) => {
     if (!selectedTabId) return;
+
     removeTabItem.mutate({ id: selectedTabId, itemName }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListTabsQueryKey() });
@@ -74,7 +93,14 @@ export default function OperatorPage() {
 
   const handlePay = (paymentMethod: PaymentMethod) => {
     if (!selectedTabId) return;
-    payTab.mutate({ id: selectedTabId, data: { paymentMethod } }, {
+
+    payTab.mutate({
+      id: selectedTabId,
+      data: {
+        paymentMethod,
+        closedBy: getEmployeeName(),
+      }
+    }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListTabsQueryKey() });
         setSelectedTabId(null);
@@ -86,7 +112,14 @@ export default function OperatorPage() {
 
   const handleClose = (paymentMethod: PaymentMethod) => {
     if (!selectedTabId) return;
-    closeTab.mutate({ id: selectedTabId, data: { paymentMethod } }, {
+
+    closeTab.mutate({
+      id: selectedTabId,
+      data: {
+        paymentMethod,
+        closedBy: getEmployeeName(),
+      }
+    }, {
       onSuccess: (res) => {
         queryClient.invalidateQueries({ queryKey: getListTabsQueryKey() });
         setSelectedTabId(null);
@@ -125,7 +158,7 @@ export default function OperatorPage() {
             placeholder="Nome do cliente"
             value={newCustomerName}
             onChange={(e) => setNewCustomerName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleCreateTab()}
+            onKeyDown={(e) => e.key === "Enter" && handleCreateTab()}
             className="text-lg py-6"
           />
           <Button size="lg" onClick={handleCreateTab} disabled={!newCustomerName.trim() || createTab.isPending} className="text-lg font-bold">
@@ -214,17 +247,15 @@ export default function OperatorPage() {
   const tabDetail = selectedTab ? (
     <div className="flex-1 flex flex-col h-full">
       <div className="p-4 border-b border-border bg-card flex justify-between items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden shrink-0"
-          onClick={() => setSelectedTabId(null)}
-        >
+        <Button variant="ghost" size="icon" className="md:hidden shrink-0" onClick={() => setSelectedTabId(null)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-xl md:text-2xl truncate">{selectedTab.customer}</h3>
           <p className="text-xs text-muted-foreground font-mono mt-1 truncate">ID: {selectedTab.id}</p>
+          {selectedTab.openedBy && (
+            <p className="text-xs text-muted-foreground mt-1">Aberta por: {selectedTab.openedBy}</p>
+          )}
         </div>
         <div className="text-right shrink-0">
           <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-widest">Total</p>
@@ -239,6 +270,9 @@ export default function OperatorPage() {
               <div className="flex flex-col min-w-0">
                 <span className="font-semibold text-base md:text-lg truncate">{item.name}</span>
                 <span className="font-mono text-sm text-primary">{formatCurrency(item.price)} x {item.qty}</span>
+                {item.addedBy && (
+                  <span className="text-xs text-muted-foreground">Adicionado por: {item.addedBy}</span>
+                )}
               </div>
               <div className="flex items-center gap-2 md:gap-4 shrink-0">
                 <span className="font-mono font-bold text-base md:text-lg">{formatCurrency(item.price * item.qty)}</span>
@@ -258,29 +292,13 @@ export default function OperatorPage() {
       </ScrollArea>
 
       <div className="p-3 md:p-4 bg-card border-t border-border flex flex-col gap-2 md:grid md:grid-cols-3">
-        <Button
-          size="lg"
-          variant="outline"
-          onClick={() => setIsMenuOpen(true)}
-          className="md:hidden font-bold text-base h-14 border-primary/50 hover:bg-primary/20"
-        >
+        <Button size="lg" variant="outline" onClick={() => setIsMenuOpen(true)} className="md:hidden font-bold text-base h-14 border-primary/50 hover:bg-primary/20">
           <ShoppingBag className="mr-2 h-5 w-5" /> Adicionar Itens
         </Button>
-        <Button
-          size="lg"
-          variant="outline"
-          onClick={() => setPaymentDialog("pay")}
-          disabled={isPaymentPending || selectedTab.items.length === 0}
-          className="font-bold text-base md:text-lg h-14 md:h-16 border-primary/50 hover:bg-primary/20"
-        >
+        <Button size="lg" variant="outline" onClick={() => setPaymentDialog("pay")} disabled={isPaymentPending || selectedTab.items.length === 0} className="font-bold text-base md:text-lg h-14 md:h-16 border-primary/50 hover:bg-primary/20">
           <Check className="mr-2 h-5 w-5" /> Pagar
         </Button>
-        <Button
-          size="lg"
-          onClick={() => setPaymentDialog("close")}
-          disabled={isPaymentPending || selectedTab.items.length === 0}
-          className="font-bold text-base md:text-lg h-14 md:h-16 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,255,0,0.2)] md:col-span-1"
-        >
+        <Button size="lg" onClick={() => setPaymentDialog("close")} disabled={isPaymentPending || selectedTab.items.length === 0} className="font-bold text-base md:text-lg h-14 md:h-16 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,255,0,0.2)] md:col-span-1">
           <Send className="mr-2 h-5 w-5" /> Fechar + WhatsApp
         </Button>
       </div>
@@ -295,34 +313,27 @@ export default function OperatorPage() {
 
   return (
     <div className="flex flex-col md:flex-row h-full">
-      {/* Mobile: show tabs OR detail. Desktop: show tabs always. */}
       <div className={`${selectedTab ? "hidden md:flex" : "flex"} md:flex h-full flex-col w-full md:w-80 shrink-0`}>
         {tabsList}
       </div>
 
-      {/* Detail area */}
       <div className={`${selectedTab ? "flex" : "hidden md:flex"} flex-1 flex-col h-full min-w-0`}>
         {tabDetail}
       </div>
 
-      {/* Desktop: persistent menu panel on the right */}
       <div className="hidden md:flex w-96 border-l border-border h-full shrink-0">
         {menuPanel}
       </div>
 
-      {/* Mobile: menu in a bottom sheet */}
       <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
         <SheetContent side="bottom" className="h-[85vh] p-0 flex flex-col md:hidden">
           <SheetHeader className="p-4 border-b border-border">
             <SheetTitle className="text-primary uppercase tracking-wider">Cardápio</SheetTitle>
           </SheetHeader>
-          <div className="flex-1 min-h-0">
-            {menuPanel}
-          </div>
+          <div className="flex-1 min-h-0">{menuPanel}</div>
         </SheetContent>
       </Sheet>
 
-      {/* Payment method picker */}
       <Dialog open={paymentDialog !== null} onOpenChange={(open) => !open && setPaymentDialog(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
