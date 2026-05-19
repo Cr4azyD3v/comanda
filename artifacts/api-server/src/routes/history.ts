@@ -10,10 +10,7 @@ router.delete("/history", async (_req, res) => {
 });
 
 router.get("/history", async (_req, res) => {
-  const rows = await db
-    .select()
-    .from(historyTable)
-    .orderBy(desc(historyTable.closedAt));
+  const rows = await db.select().from(historyTable).orderBy(desc(historyTable.closedAt));
 
   res.json(
     rows.map((r) => ({
@@ -21,11 +18,7 @@ router.get("/history", async (_req, res) => {
       customer: r.customer,
       items: r.items,
       total: r.total,
-      paymentMethod: (r.paymentMethod ?? "dinheiro") as
-        | "dinheiro"
-        | "credito"
-        | "debito"
-        | "pix",
+      paymentMethod: r.paymentMethod ?? "dinheiro",
       closedBy: r.closedBy,
       closedAt: r.closedAt.toISOString(),
     })),
@@ -35,29 +28,21 @@ router.get("/history", async (_req, res) => {
 router.post("/history/:id/reopen", async (req, res) => {
   const { id } = req.params;
 
-  const [entry] = await db
-    .select()
-    .from(historyTable)
-    .where(eq(historyTable.id, id));
+  const [entry] = await db.select().from(historyTable).where(eq(historyTable.id, id));
 
   if (!entry) {
     res.status(404).json({ error: "Histórico não encontrado" });
     return;
   }
 
-  const [newTab] = await db
-    .insert(tabsTable)
-    .values({
-      customer: entry.customer,
-      items: entry.items,
-      status: "open",
-      openedBy: entry.closedBy ?? "Reaberto",
-    })
-    .returning();
+  const [newTab] = await db.insert(tabsTable).values({
+    customer: entry.customer,
+    openedBy: `Reaberto por ${req.body?.reopenedBy ?? "Sistema"}`,
+    items: entry.items,
+    status: "open",
+  }).returning();
 
-  await db
-    .delete(historyTable)
-    .where(eq(historyTable.id, id));
+  await db.delete(historyTable).where(eq(historyTable.id, id));
 
   res.json({
     success: true,
