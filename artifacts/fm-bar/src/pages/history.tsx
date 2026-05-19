@@ -190,6 +190,7 @@ export default function HistoryPage() {
                   <TableHead className="font-bold text-foreground">Cliente</TableHead>
                   <TableHead className="font-bold text-foreground">Itens</TableHead>
                   <TableHead className="font-bold text-foreground">Pagamento</TableHead>
+                  <TableHead className="font-bold text-foreground">Funcionário</TableHead>
                   <TableHead className="font-bold text-foreground">Fechado por</TableHead>
                   <TableHead className="text-right font-bold text-foreground">Total</TableHead>
                   <TableHead className="text-right font-bold text-foreground">Ações</TableHead>
@@ -216,7 +217,7 @@ export default function HistoryPage() {
 
                     <TableCell className="text-sm text-muted-foreground">
                       {entry.closedBy ?? "-"}
-                    </TableCell>
+                     </TableCell>
 
                     <TableCell className="text-right font-mono font-bold text-primary text-lg">
                       {formatCurrency(entry.total)}
