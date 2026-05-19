@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { db, historyTable } from "@workspace/db";
-import { desc } from "drizzle-orm";
+import { db, historyTable, tabsTable } from "@workspace/db";
+import { desc, eq } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -14,16 +14,55 @@ router.get("/history", async (_req, res) => {
     .select()
     .from(historyTable)
     .orderBy(desc(historyTable.closedAt));
+
   res.json(
     rows.map((r) => ({
       id: r.id,
       customer: r.customer,
       items: r.items,
       total: r.total,
-      paymentMethod: (r.paymentMethod ?? "dinheiro") as "dinheiro" | "credito" | "debito" | "pix",
+      paymentMethod: (r.paymentMethod ?? "dinheiro") as
+        | "dinheiro"
+        | "credito"
+        | "debito"
+        | "pix",
+      closedBy: r.closedBy,
       closedAt: r.closedAt.toISOString(),
     })),
   );
+});
+
+router.post("/history/:id/reopen", async (req, res) => {
+  const { id } = req.params;
+
+  const [entry] = await db
+    .select()
+    .from(historyTable)
+    .where(eq(historyTable.id, id));
+
+  if (!entry) {
+    res.status(404).json({ error: "Histórico não encontrado" });
+    return;
+  }
+
+  const [newTab] = await db
+    .insert(tabsTable)
+    .values({
+      customer: entry.customer,
+      items: entry.items,
+      status: "open",
+      openedBy: entry.closedBy ?? "Reaberto",
+    })
+    .returning();
+
+  await db
+    .delete(historyTable)
+    .where(eq(historyTable.id, id));
+
+  res.json({
+    success: true,
+    reopenedTab: newTab,
+  });
 });
 
 export default router;
