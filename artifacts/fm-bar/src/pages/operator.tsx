@@ -698,5 +698,53 @@ export default function OperatorPage() {
         </SheetContent>
       </Sheet>
     </div>
+      <Dialog
+        open={paymentDialog !== null}
+        onOpenChange={(open) => !open && setPaymentDialog(null)}
+      >
+        <DialogContent className="w-[92vw] rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-primary uppercase tracking-wider">
+              {paymentDialog === "close"
+                ? "Fechar e Pagar"
+                : "Forma de Pagamento"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="py-2">
+            {selectedTab && (
+              <div className="text-center mb-4 rounded-2xl bg-primary/10 border border-primary/20 p-4">
+                <p className="text-sm text-muted-foreground uppercase tracking-widest">
+                  Total
+                </p>
+
+                <p className="font-mono text-4xl font-black text-primary">
+                  {formatCurrency(selectedTab.total)}
+                </p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              {PAYMENT_OPTIONS.map(({ id, label, icon: Icon }) => (
+                <Button
+                  key={id}
+                  variant="outline"
+                  size="lg"
+                  disabled={isAnyActionPending}
+                  onClick={() =>
+                    paymentDialog === "close"
+                      ? handleClose(id)
+                      : handlePay(id)
+                  }
+                  className="flex flex-col items-center justify-center h-24 rounded-2xl gap-2 border-border hover:border-primary hover:bg-primary/10 hover:text-primary"
+                >
+                  <Icon className="w-7 h-7" />
+                  <span className="font-black text-base">{label}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
   );
 }
