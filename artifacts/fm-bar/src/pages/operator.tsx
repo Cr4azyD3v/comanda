@@ -682,7 +682,6 @@ export default function OperatorPage() {
       <div className="hidden md:flex w-96 border-l border-border h-full shrink-0">
         {menuPanel}
       </div>
-
       <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
         <SheetContent
           side="bottom"
@@ -697,7 +696,7 @@ export default function OperatorPage() {
           <div className="flex-1 min-h-0">{menuPanel}</div>
         </SheetContent>
       </Sheet>
-    </div>
+
       <Dialog
         open={paymentDialog !== null}
         onOpenChange={(open) => !open && setPaymentDialog(null)}
@@ -746,5 +745,6 @@ export default function OperatorPage() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
   );
 }
