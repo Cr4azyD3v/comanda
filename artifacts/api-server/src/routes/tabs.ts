@@ -12,6 +12,8 @@ import { eq } from "drizzle-orm";
 
 const router: IRouter = Router();
 
+const PIX_KEY = "31992989353";
+
 function totalOf(items: TabItem[]): number {
   return items.reduce((total, item) => total + item.price * item.qty, 0);
 }
@@ -31,6 +33,22 @@ function serialize(tab: TabRow) {
 async function getTabById(id: string) {
   const [tab] = await db.select().from(tabsTable).where(eq(tabsTable.id, id));
   return tab;
+}
+
+function buildItemsMessage(items: TabItem[]) {
+  let msg = "";
+
+  for (const item of items) {
+    msg += `${item.name} x${item.qty} = R$ ${(item.price * item.qty).toFixed(2)}`;
+
+    if (item.addedBy) {
+      msg += ` (${item.addedBy})`;
+    }
+
+    msg += "\n";
+  }
+
+  return msg;
 }
 
 router.get("/tabs", async (_req, res) => {
@@ -162,7 +180,6 @@ router.delete("/tabs/:id/items/:itemName", async (req, res) => {
     }
 
     const items = Array.isArray(tab.items) ? [...tab.items] : [];
-
     const itemIndex = items.findIndex((item) => item.name === decodedItemName);
 
     if (itemIndex === -1) {
@@ -232,6 +249,7 @@ const PAYMENT_LABELS: Record<string, string> = {
   credito: "Crédito",
   debito: "Débito",
   pix: "Pix",
+  pendente: "Pendente",
 };
 
 router.post("/tabs/:id/close", async (req, res) => {
@@ -251,17 +269,7 @@ router.post("/tabs/:id/close", async (req, res) => {
     const closedBy = body.closedBy || "Desconhecido";
 
     let msg = `*FM BAR*\n\nCliente: ${tab.customer}\n\n`;
-
-    for (const item of tab.items) {
-      msg += `${item.name} x${item.qty} = R$ ${(item.price * item.qty).toFixed(2)}`;
-
-      if (item.addedBy) {
-        msg += ` (${item.addedBy})`;
-      }
-
-      msg += "\n";
-    }
-
+    msg += buildItemsMessage(tab.items);
     msg += `\n*Total: R$ ${total.toFixed(2)}*`;
     msg += `\nPagamento: ${PAYMENT_LABELS[paymentMethod] ?? paymentMethod}`;
     msg += `\nFechado por: ${closedBy}`;
@@ -285,6 +293,50 @@ router.post("/tabs/:id/close", async (req, res) => {
   } catch (error) {
     console.error("Erro ao fechar comanda:", error);
     res.status(500).json({ error: "Erro ao fechar comanda" });
+  }
+});
+
+router.post("/tabs/:id/pending", async (req, res) => {
+  try {
+    const { id } = GetTabParams.parse(req.params);
+    const body = req.body as { closedBy?: string };
+
+    const tab = await getTabById(id);
+
+    if (!tab) {
+      res.status(404).json({ error: "Comanda não encontrada" });
+      return;
+    }
+
+    const total = totalOf(tab.items);
+    const closedBy = body.closedBy || "Desconhecido";
+
+    let msg = `*FM BAR*\n\nCliente: ${tab.customer}\n\n`;
+    msg += buildItemsMessage(tab.items);
+    msg += `\n*Total: R$ ${total.toFixed(2)}*`;
+    msg += `\n\n⚠️ *PAGAMENTO PENDENTE*`;
+    msg += `\n\nPix: ${PIX_KEY}`;
+    msg += `\n\nApós o pagamento, envie o comprovante.`;
+    msg += `\n\nMarcado como pendente por: ${closedBy}`;
+
+    await db.insert(historyTable).values({
+      customer: tab.customer,
+      items: tab.items,
+      total,
+      paymentMethod: "pendente",
+      closedBy,
+    });
+
+    await db.delete(tabsTable).where(eq(tabsTable.id, id));
+
+    res.json({
+      tab: serialize(tab),
+      whatsappMessage: msg,
+      whatsappUrl: `https://wa.me/?text=${encodeURIComponent(msg)}`,
+    });
+  } catch (error) {
+    console.error("Erro ao marcar como pendente:", error);
+    res.status(500).json({ error: "Erro ao marcar como pendente" });
   }
 });
 

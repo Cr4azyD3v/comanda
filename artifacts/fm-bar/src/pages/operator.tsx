@@ -39,6 +39,7 @@ import {
   Banknote,
   CreditCard,
   Smartphone,
+  AlertTriangle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -289,6 +290,51 @@ export default function OperatorPage() {
     );
   };
 
+  const handlePending = async () => {
+    if (!selectedTabId || isAnyActionPending) return;
+
+    setBusyAction("pending-tab");
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/tabs/${selectedTabId}/pending`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            closedBy: getEmployeeName(),
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao marcar como pendente");
+      }
+
+      const res = await response.json();
+
+      refreshTabs();
+      setSelectedTabId(null);
+      setPaymentDialog(null);
+
+      window.open(res.whatsappUrl, "_blank");
+
+      toast({
+        title: "Pendente enviado",
+        description: "Mensagem com Pix enviada no WhatsApp.",
+      });
+    } catch {
+      toast({
+        title: "Erro",
+        description: "Não foi possível marcar como pendente.",
+      });
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
   const filteredMenu = useMemo(() => {
     if (!searchTerm) return menu;
 
@@ -458,6 +504,7 @@ export default function OperatorPage() {
       </ScrollArea>
     </div>
   );
+
   const tabDetail = selectedTab ? (
     <div className="flex-1 flex flex-col h-full">
       <div className="p-4 border-b border-border bg-card flex justify-between items-center gap-3">
@@ -573,10 +620,7 @@ export default function OperatorPage() {
           size="lg"
           variant="outline"
           onClick={() => setPaymentDialog("pay")}
-          disabled={
-            isAnyActionPending ||
-            selectedTab.items.length === 0
-          }
+          disabled={isAnyActionPending || selectedTab.items.length === 0}
           className="font-bold text-base md:text-lg h-14 md:h-16 border-primary/50 hover:bg-primary/20"
         >
           <Check className="mr-2 h-5 w-5" />
@@ -585,12 +629,20 @@ export default function OperatorPage() {
 
         <Button
           size="lg"
+          variant="outline"
+          onClick={handlePending}
+          disabled={isAnyActionPending || selectedTab.items.length === 0}
+          className="font-bold text-base md:text-lg h-14 md:h-16 border-yellow-500/60 text-yellow-300 hover:bg-yellow-500/10"
+        >
+          <AlertTriangle className="mr-2 h-5 w-5" />
+          {busyAction === "pending-tab" ? "Enviando..." : "Pendente + WhatsApp"}
+        </Button>
+
+        <Button
+          size="lg"
           onClick={() => setPaymentDialog("close")}
-          disabled={
-            isAnyActionPending ||
-            selectedTab.items.length === 0
-          }
-          className="font-bold text-base md:text-lg h-14 md:h-16 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,255,0,0.2)] md:col-span-1"
+          disabled={isAnyActionPending || selectedTab.items.length === 0}
+          className="font-bold text-base md:text-lg h-14 md:h-16 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,255,0,0.2)] md:col-span-3"
         >
           <Send className="mr-2 h-5 w-5" />
           {closeTab.isPending || busyAction === "close-tab"
