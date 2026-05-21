@@ -112,7 +112,6 @@ export default function OperatorPage() {
 
   const handleCreateTab = () => {
     const customer = newCustomerName.trim();
-
     if (!customer || createTab.isPending) return;
 
     setBusyAction("create-tab");
@@ -142,9 +141,7 @@ export default function OperatorPage() {
             description: "Não foi possível criar a comanda.",
           });
         },
-        onSettled: () => {
-          setBusyAction(null);
-        },
+        onSettled: () => setBusyAction(null),
       },
     );
   };
@@ -153,7 +150,6 @@ export default function OperatorPage() {
     if (!selectedTabId) return;
 
     const key = actionKey(selectedTabId, name);
-
     if (busyAction === key || addTabItem.isPending) return;
 
     setBusyAction(key);
@@ -168,18 +164,14 @@ export default function OperatorPage() {
         },
       },
       {
-        onSuccess: () => {
-          refreshTabs();
-        },
+        onSuccess: refreshTabs,
         onError: () => {
           toast({
             title: "Erro",
             description: `Não foi possível adicionar ${name}.`,
           });
         },
-        onSettled: () => {
-          setBusyAction(null);
-        },
+        onSettled: () => setBusyAction(null),
       },
     );
   };
@@ -188,7 +180,6 @@ export default function OperatorPage() {
     if (!selectedTabId) return;
 
     const key = actionKey(selectedTabId, `remove:${itemName}`);
-
     if (busyAction === key || removeTabItem.isPending) return;
 
     setBusyAction(key);
@@ -199,18 +190,14 @@ export default function OperatorPage() {
         itemName,
       },
       {
-        onSuccess: () => {
-          refreshTabs();
-        },
+        onSuccess: refreshTabs,
         onError: () => {
           toast({
             title: "Erro",
             description: `Não foi possível remover ${itemName}.`,
           });
         },
-        onSettled: () => {
-          setBusyAction(null);
-        },
+        onSettled: () => setBusyAction(null),
       },
     );
   };
@@ -245,9 +232,7 @@ export default function OperatorPage() {
             description: "Não foi possível pagar a comanda.",
           });
         },
-        onSettled: () => {
-          setBusyAction(null);
-        },
+        onSettled: () => setBusyAction(null),
       },
     );
   };
@@ -283,9 +268,7 @@ export default function OperatorPage() {
             description: "Não foi possível fechar a comanda.",
           });
         },
-        onSettled: () => {
-          setBusyAction(null);
-        },
+        onSettled: () => setBusyAction(null),
       },
     );
   };
@@ -309,16 +292,13 @@ export default function OperatorPage() {
         },
       );
 
-      if (!response.ok) {
-        throw new Error("Erro ao marcar como pendente");
-      }
+      if (!response.ok) throw new Error("Erro ao marcar como pendente");
 
       const res = await response.json();
 
       refreshTabs();
       setSelectedTabId(null);
       setPaymentDialog(null);
-
       window.open(res.whatsappUrl, "_blank");
 
       toast({
@@ -357,15 +337,15 @@ export default function OperatorPage() {
           size="icon"
           variant="default"
           disabled={isAnyActionPending}
-          className="rounded-full shadow-[0_0_15px_rgba(0,255,0,0.3)]"
+          className="h-12 w-12 rounded-2xl shadow-[0_0_18px_rgba(0,255,136,0.25)]"
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-6 w-6" />
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[92vw] rounded-2xl sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nova Comanda</DialogTitle>
+          <DialogTitle className="text-2xl">Nova Comanda</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-4">
@@ -377,14 +357,14 @@ export default function OperatorPage() {
             onKeyDown={(event) => {
               if (event.key === "Enter") handleCreateTab();
             }}
-            className="text-lg py-6"
+            className="h-14 text-lg rounded-xl"
           />
 
           <Button
             size="lg"
             onClick={handleCreateTab}
             disabled={!newCustomerName.trim() || createTab.isPending || busyAction === "create-tab"}
-            className="text-lg font-bold"
+            className="h-14 rounded-xl text-lg font-black"
           >
             {createTab.isPending || busyAction === "create-tab"
               ? "Criando..."
@@ -396,29 +376,29 @@ export default function OperatorPage() {
   );
 
   const menuPanel = (
-    <div className="flex flex-col h-full bg-card">
-      <div className="p-4 border-b border-border">
+    <div className="flex flex-col h-full bg-background md:bg-card">
+      <div className="p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur">
         <div className="relative">
-          <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+          <Search className="absolute left-4 top-4 h-5 w-5 text-muted-foreground" />
 
           <Input
             placeholder="Buscar no cardápio..."
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            className="pl-10 text-lg py-6 bg-background border-border/50 focus-visible:ring-primary"
+            className="h-14 pl-12 text-base rounded-2xl bg-background border-border/70 focus-visible:ring-primary"
           />
         </div>
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-2 flex flex-col gap-6">
+        <div className="p-3 flex flex-col gap-5">
           {filteredMenu.map((category) => (
             <div key={category.category}>
-              <h4 className="px-2 mb-3 text-sm font-bold text-muted-foreground uppercase tracking-widest">
+              <h4 className="px-1 mb-2 text-xs font-black text-muted-foreground uppercase tracking-[0.18em]">
                 {category.category}
               </h4>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 {category.items.map((item) => {
                   const key = selectedTabId ? actionKey(selectedTabId, item.name) : "";
                   const isBusy = busyAction === key || addTabItem.isPending;
@@ -428,15 +408,17 @@ export default function OperatorPage() {
                       key={item.id}
                       disabled={!selectedTabId || isBusy}
                       onClick={() => handleAddItem(item.name, item.price)}
-                      className="flex flex-col items-center justify-center p-3 h-24 bg-background border border-border rounded-lg active:scale-95 transition-transform hover:border-primary/50 text-center disabled:opacity-50 disabled:pointer-events-none"
+                      className="min-h-28 rounded-2xl bg-card border border-border p-3 text-left active:scale-[0.98] transition-all hover:border-primary/50 disabled:opacity-50 disabled:pointer-events-none shadow-sm"
                     >
-                      <span className="font-semibold text-sm line-clamp-2 leading-tight mb-1">
-                        {item.name}
-                      </span>
+                      <div className="flex flex-col h-full">
+                        <span className="font-black text-sm leading-tight line-clamp-3">
+                          {item.name}
+                        </span>
 
-                      <span className="font-mono text-primary font-bold mt-auto">
-                        {isBusy ? "Adicionando..." : formatCurrency(item.price)}
-                      </span>
+                        <span className="mt-auto pt-3 font-mono text-lg text-primary font-black">
+                          {isBusy ? "..." : formatCurrency(item.price)}
+                        </span>
+                      </div>
                     </button>
                   );
                 })}
@@ -455,48 +437,57 @@ export default function OperatorPage() {
   );
 
   const tabsList = (
-    <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-card flex flex-col h-full">
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <h2 className="font-bold text-xl uppercase tracking-wider text-primary">
-          Comandas
-        </h2>
+    <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-background md:bg-card flex flex-col h-full">
+      <div className="p-4 border-b border-border bg-card flex items-center justify-between">
+        <div>
+          <h2 className="font-black text-2xl uppercase tracking-wider text-primary">
+            Comandas
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            {tabs.length} abertas
+          </p>
+        </div>
 
         {newTabDialog}
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-2 flex flex-col gap-2">
+        <div className="p-3 flex flex-col gap-3">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setSelectedTabId(tab.id)}
               disabled={isAnyActionPending}
-              className={`flex flex-col items-start w-full p-3 rounded-lg border transition-all text-left disabled:opacity-70 ${
+              className={`flex flex-col items-start w-full p-4 rounded-2xl border transition-all text-left active:scale-[0.99] disabled:opacity-70 ${
                 selectedTabId === tab.id
-                  ? "border-primary bg-primary/10 shadow-[0_0_10px_rgba(0,255,0,0.1)]"
-                  : "border-border/50 bg-background/50 hover:bg-card hover:border-border"
+                  ? "border-primary bg-primary/10 shadow-[0_0_16px_rgba(0,255,136,0.12)]"
+                  : "border-border bg-card hover:border-primary/40"
               }`}
             >
-              <div className="flex items-center justify-between w-full mb-1">
-                <span className="font-bold text-lg truncate pr-2">
+              <div className="flex items-center justify-between w-full gap-3">
+                <span className="font-black text-xl truncate">
                   {tab.customer}
+                </span>
+
+                <span className="font-mono text-primary font-black text-lg shrink-0">
+                  {formatCurrency(tab.total)}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between w-full">
+              <div className="flex items-center justify-between w-full mt-2">
                 <span className="text-xs text-muted-foreground font-mono">
-                  {tab.id.slice(0, 6)}
+                  #{tab.id.slice(0, 6)}
                 </span>
 
-                <span className="font-mono text-primary font-bold">
-                  {formatCurrency(tab.total)}
+                <span className="text-xs text-muted-foreground">
+                  {tab.items.length} itens
                 </span>
               </div>
             </button>
           ))}
 
           {tabs.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground text-sm">
+            <div className="text-center py-14 text-muted-foreground text-sm">
               Nenhuma comanda aberta.
             </div>
           )}
@@ -506,12 +497,12 @@ export default function OperatorPage() {
   );
 
   const tabDetail = selectedTab ? (
-    <div className="flex-1 flex flex-col h-full">
+    <div className="flex-1 flex flex-col h-full bg-background">
       <div className="p-4 border-b border-border bg-card flex justify-between items-center gap-3">
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden shrink-0"
+          className="md:hidden shrink-0 rounded-xl"
           onClick={() => setSelectedTabId(null)}
           disabled={isAnyActionPending}
         >
@@ -519,12 +510,12 @@ export default function OperatorPage() {
         </Button>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-xl md:text-2xl truncate">
+          <h3 className="font-black text-2xl truncate">
             {selectedTab.customer}
           </h3>
 
           <p className="text-xs text-muted-foreground font-mono mt-1 truncate">
-            ID: {selectedTab.id}
+            #{selectedTab.id.slice(0, 8)}
           </p>
 
           {selectedTab.openedBy && (
@@ -534,18 +525,18 @@ export default function OperatorPage() {
           )}
         </div>
 
-        <div className="text-right shrink-0">
-          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-widest">
+        <div className="text-right shrink-0 rounded-2xl bg-primary/10 px-3 py-2 border border-primary/20">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
             Total
           </p>
 
-          <p className="font-mono text-2xl md:text-3xl font-black text-primary">
+          <p className="font-mono text-2xl font-black text-primary">
             {formatCurrency(selectedTab.total)}
           </p>
         </div>
       </div>
 
-      <ScrollArea className="flex-1 bg-background p-4">
+      <ScrollArea className="flex-1 p-3 md:p-4">
         <div className="flex flex-col gap-3">
           {selectedTab.items.map((item, index) => {
             const key = actionKey(selectedTab.id, `remove:${item.name}`);
@@ -554,26 +545,26 @@ export default function OperatorPage() {
             return (
               <div
                 key={`${item.name}-${item.addedBy ?? "sem-funcionario"}-${index}`}
-                className="flex items-center justify-between bg-card border border-border/50 p-3 rounded-lg"
+                className="flex items-center justify-between gap-3 bg-card border border-border p-4 rounded-2xl shadow-sm"
               >
                 <div className="flex flex-col min-w-0">
-                  <span className="font-semibold text-base md:text-lg truncate">
+                  <span className="font-black text-base truncate">
                     {item.name}
                   </span>
 
-                  <span className="font-mono text-sm text-primary">
+                  <span className="font-mono text-sm text-primary mt-1">
                     {formatCurrency(item.price)} x {item.qty}
                   </span>
 
                   {item.addedBy && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground mt-1 truncate">
                       Adicionado por: {item.addedBy}
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                  <span className="font-mono font-bold text-base md:text-lg">
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="font-mono font-black text-base">
                     {formatCurrency(item.price * item.qty)}
                   </span>
 
@@ -582,7 +573,7 @@ export default function OperatorPage() {
                     size="icon"
                     disabled={isRemoving || isAnyActionPending}
                     onClick={() => handleRemoveItem(item.name)}
-                    className="text-destructive hover:bg-destructive/20 hover:text-destructive disabled:opacity-50"
+                    className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/15 hover:text-destructive disabled:opacity-50"
                   >
                     {isRemoving ? (
                       <span className="text-xs">...</span>
@@ -596,21 +587,22 @@ export default function OperatorPage() {
           })}
 
           {selectedTab.items.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>A comanda está vazia.</p>
+            <div className="text-center py-20 text-muted-foreground">
+              <ShoppingBag className="w-14 h-14 mx-auto mb-4 opacity-20" />
+              <p className="font-bold text-foreground">A comanda está vazia.</p>
               <p className="text-sm mt-2">Adicione itens pelo cardápio.</p>
             </div>
           )}
         </div>
       </ScrollArea>
 
-      <div className="p-3 md:p-4 bg-card border-t border-border flex flex-col gap-2 md:grid md:grid-cols-3">
+      <div className="p-3 md:p-4 bg-card border-t border-border grid grid-cols-1 gap-2 md:grid-cols-3">
         <Button
           size="lg"
           variant="outline"
           onClick={() => setIsMenuOpen(true)}
           disabled={isAnyActionPending}
-          className="md:hidden font-bold text-base h-14 border-primary/50 hover:bg-primary/20"
+          className="md:hidden rounded-2xl font-black text-base h-14 border-primary/50 hover:bg-primary/20"
         >
           <ShoppingBag className="mr-2 h-5 w-5" />
           Adicionar Itens
@@ -621,7 +613,7 @@ export default function OperatorPage() {
           variant="outline"
           onClick={() => setPaymentDialog("pay")}
           disabled={isAnyActionPending || selectedTab.items.length === 0}
-          className="font-bold text-base md:text-lg h-14 md:h-16 border-primary/50 hover:bg-primary/20"
+          className="rounded-2xl font-black text-base h-14 border-primary/50 hover:bg-primary/20"
         >
           <Check className="mr-2 h-5 w-5" />
           {payTab.isPending || busyAction === "pay-tab" ? "Pagando..." : "Pagar"}
@@ -632,7 +624,7 @@ export default function OperatorPage() {
           variant="outline"
           onClick={handlePending}
           disabled={isAnyActionPending || selectedTab.items.length === 0}
-          className="font-bold text-base md:text-lg h-14 md:h-16 border-yellow-500/60 text-yellow-300 hover:bg-yellow-500/10"
+          className="rounded-2xl font-black text-base h-14 border-yellow-500/60 text-yellow-300 hover:bg-yellow-500/10"
         >
           <AlertTriangle className="mr-2 h-5 w-5" />
           {busyAction === "pending-tab" ? "Enviando..." : "Pendente + WhatsApp"}
@@ -642,7 +634,7 @@ export default function OperatorPage() {
           size="lg"
           onClick={() => setPaymentDialog("close")}
           disabled={isAnyActionPending || selectedTab.items.length === 0}
-          className="font-bold text-base md:text-lg h-14 md:h-16 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,255,0,0.2)] md:col-span-3"
+          className="rounded-2xl font-black text-base h-14 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_16px_rgba(0,255,136,0.18)]"
         >
           <Send className="mr-2 h-5 w-5" />
           {closeTab.isPending || busyAction === "close-tab"
@@ -655,18 +647,18 @@ export default function OperatorPage() {
     <div className="flex-1 flex-col items-center justify-center text-muted-foreground bg-background p-6 text-center hidden md:flex">
       <ListOrdered className="w-16 h-16 mb-4 opacity-20" />
 
-      <h2 className="text-2xl font-bold text-foreground mb-2">
+      <h2 className="text-2xl font-black text-foreground mb-2">
         Nenhuma comanda selecionada
       </h2>
 
       <p>
-        Selecione uma comanda na lista ou crie uma nova para começar a adicionar itens.
+        Selecione uma comanda na lista ou crie uma nova para começar.
       </p>
     </div>
   );
 
   return (
-    <div className="flex flex-col md:flex-row h-full">
+    <div className="flex flex-col md:flex-row h-full overflow-hidden">
       <div
         className={`${
           selectedTab ? "hidden md:flex" : "flex"
@@ -690,7 +682,7 @@ export default function OperatorPage() {
       <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
         <SheetContent
           side="bottom"
-          className="h-[85vh] p-0 flex flex-col md:hidden"
+          className="h-[88vh] p-0 flex flex-col md:hidden rounded-t-3xl"
         >
           <SheetHeader className="p-4 border-b border-border">
             <SheetTitle className="text-primary uppercase tracking-wider">
@@ -706,7 +698,7 @@ export default function OperatorPage() {
         open={paymentDialog !== null}
         onOpenChange={(open) => !open && setPaymentDialog(null)}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[92vw] rounded-2xl sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-primary uppercase tracking-wider">
               {paymentDialog === "close"
@@ -717,12 +709,12 @@ export default function OperatorPage() {
 
           <div className="py-2">
             {selectedTab && (
-              <div className="text-center mb-4">
+              <div className="text-center mb-4 rounded-2xl bg-primary/10 border border-primary/20 p-4">
                 <p className="text-sm text-muted-foreground uppercase tracking-widest">
                   Total
                 </p>
 
-                <p className="font-mono text-3xl font-black text-primary">
+                <p className="font-mono text-4xl font-black text-primary">
                   {formatCurrency(selectedTab.total)}
                 </p>
               </div>
@@ -740,10 +732,10 @@ export default function OperatorPage() {
                       ? handleClose(id)
                       : handlePay(id)
                   }
-                  className="flex flex-col items-center justify-center h-24 gap-2 border-border hover:border-primary hover:bg-primary/10 hover:text-primary"
+                  className="flex flex-col items-center justify-center h-24 rounded-2xl gap-2 border-border hover:border-primary hover:bg-primary/10 hover:text-primary"
                 >
                   <Icon className="w-7 h-7" />
-                  <span className="font-bold text-base">{label}</span>
+                  <span className="font-black text-base">{label}</span>
                 </Button>
               ))}
             </div>
