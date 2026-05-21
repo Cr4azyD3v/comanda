@@ -64,6 +64,14 @@ function actionKey(tabId: string, itemName: string) {
   return `${tabId}:${itemName}`;
 }
 
+function normalizeSearch(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 export default function OperatorPage() {
   const [selectedTabId, setSelectedTabId] = useState<string | null>(null);
   const [newCustomerName, setNewCustomerName] = useState("");
@@ -316,20 +324,30 @@ export default function OperatorPage() {
   };
 
   const filteredMenu = useMemo(() => {
-    if (!searchTerm) return menu;
+    const search = normalizeSearch(searchTerm);
 
-    const lowerSearch = searchTerm.toLowerCase();
+    if (!search) return menu;
 
     return menu
-      .map((category) => ({
-        ...category,
-        items: category.items.filter((item) =>
-          item.name.toLowerCase().includes(lowerSearch),
-        ),
-      }))
+      .map((category) => {
+        const normalizedCategory = normalizeSearch(category.category);
+
+        return {
+          ...category,
+          items: category.items.filter((item) => {
+            const normalizedName = normalizeSearch(item.name);
+            const normalizedPrice = String(item.price);
+
+            return (
+              normalizedName.includes(search) ||
+              normalizedCategory.includes(search) ||
+              normalizedPrice.includes(search)
+            );
+          }),
+        };
+      })
       .filter((category) => category.items.length > 0);
   }, [menu, searchTerm]);
-
   const newTabDialog = (
     <Dialog open={isNewTabOpen} onOpenChange={setIsNewTabOpen}>
       <DialogTrigger asChild>
@@ -495,7 +513,6 @@ export default function OperatorPage() {
       </ScrollArea>
     </div>
   );
-
   const tabDetail = selectedTab ? (
     <div className="flex-1 flex flex-col h-full bg-background">
       <div className="p-4 border-b border-border bg-card flex justify-between items-center gap-3">
@@ -585,14 +602,6 @@ export default function OperatorPage() {
               </div>
             );
           })}
-
-          {selectedTab.items.length === 0 && (
-            <div className="text-center py-20 text-muted-foreground">
-              <ShoppingBag className="w-14 h-14 mx-auto mb-4 opacity-20" />
-              <p className="font-bold text-foreground">A comanda está vazia.</p>
-              <p className="text-sm mt-2">Adicione itens pelo cardápio.</p>
-            </div>
-          )}
         </div>
       </ScrollArea>
 
@@ -616,7 +625,7 @@ export default function OperatorPage() {
           className="rounded-2xl font-black text-base h-14 border-primary/50 hover:bg-primary/20"
         >
           <Check className="mr-2 h-5 w-5" />
-          {payTab.isPending || busyAction === "pay-tab" ? "Pagando..." : "Pagar"}
+          Pagar
         </Button>
 
         <Button
@@ -627,7 +636,7 @@ export default function OperatorPage() {
           className="rounded-2xl font-black text-base h-14 border-yellow-500/60 text-yellow-300 hover:bg-yellow-500/10"
         >
           <AlertTriangle className="mr-2 h-5 w-5" />
-          {busyAction === "pending-tab" ? "Enviando..." : "Pendente + WhatsApp"}
+          Pendente + WhatsApp
         </Button>
 
         <Button
@@ -637,23 +646,18 @@ export default function OperatorPage() {
           className="rounded-2xl font-black text-base h-14 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_16px_rgba(0,255,136,0.18)]"
         >
           <Send className="mr-2 h-5 w-5" />
-          {closeTab.isPending || busyAction === "close-tab"
-            ? "Fechando..."
-            : "Fechar + WhatsApp"}
+          Fechar + WhatsApp
         </Button>
       </div>
     </div>
   ) : (
-    <div className="flex-1 flex-col items-center justify-center text-muted-foreground bg-background p-6 text-center hidden md:flex">
-      <ListOrdered className="w-16 h-16 mb-4 opacity-20" />
-
-      <h2 className="text-2xl font-black text-foreground mb-2">
-        Nenhuma comanda selecionada
-      </h2>
-
-      <p>
-        Selecione uma comanda na lista ou crie uma nova para começar.
-      </p>
+    <div className="flex-1 hidden md:flex items-center justify-center text-muted-foreground">
+      <div className="text-center">
+        <ListOrdered className="w-16 h-16 mx-auto mb-4 opacity-20" />
+        <h2 className="text-2xl font-black mb-2">
+          Nenhuma comanda selecionada
+        </h2>
+      </div>
     </div>
   );
 
@@ -693,55 +697,6 @@ export default function OperatorPage() {
           <div className="flex-1 min-h-0">{menuPanel}</div>
         </SheetContent>
       </Sheet>
-
-      <Dialog
-        open={paymentDialog !== null}
-        onOpenChange={(open) => !open && setPaymentDialog(null)}
-      >
-        <DialogContent className="w-[92vw] rounded-2xl sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-primary uppercase tracking-wider">
-              {paymentDialog === "close"
-                ? "Fechar e Pagar"
-                : "Forma de Pagamento"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="py-2">
-            {selectedTab && (
-              <div className="text-center mb-4 rounded-2xl bg-primary/10 border border-primary/20 p-4">
-                <p className="text-sm text-muted-foreground uppercase tracking-widest">
-                  Total
-                </p>
-
-                <p className="font-mono text-4xl font-black text-primary">
-                  {formatCurrency(selectedTab.total)}
-                </p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-3">
-              {PAYMENT_OPTIONS.map(({ id, label, icon: Icon }) => (
-                <Button
-                  key={id}
-                  variant="outline"
-                  size="lg"
-                  disabled={isAnyActionPending}
-                  onClick={() =>
-                    paymentDialog === "close"
-                      ? handleClose(id)
-                      : handlePay(id)
-                  }
-                  className="flex flex-col items-center justify-center h-24 rounded-2xl gap-2 border-border hover:border-primary hover:bg-primary/10 hover:text-primary"
-                >
-                  <Icon className="w-7 h-7" />
-                  <span className="font-black text-base">{label}</span>
-                </Button>
-              ))}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
