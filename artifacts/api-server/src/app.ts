@@ -2,6 +2,7 @@ import express from "express";
 import menuRouter from "./routes/menu";
 import tabsRouter from "./routes/tabs";
 import historyRouter from "./routes/history";
+import dashboardRouter from "./routes/dashboard";
 
 const app = express();
 
@@ -34,5 +35,6 @@ app.use(express.json());
 app.use("/api", menuRouter);
 app.use("/api", tabsRouter);
 app.use("/api", historyRouter);
+app.use("/api", dashboardRouter);
 
 export default app;
