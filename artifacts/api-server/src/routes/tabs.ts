@@ -12,7 +12,7 @@ import { eq } from "drizzle-orm";
 
 const router: IRouter = Router();
 
-const PIX_KEY = "31992989353";
+const PIX_KEY = "02059556651";
 
 function totalOf(items: TabItem[]): number {
   return items.reduce((total, item) => total + item.price * item.qty, 0);
