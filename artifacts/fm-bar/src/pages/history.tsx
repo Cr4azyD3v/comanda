@@ -385,135 +385,169 @@ export default function HistoryPage() {
             ))}
           </div>
         ) : filteredHistory.length > 0 ? (
-          <div className="rounded-md border border-border overflow-hidden bg-card w-full overflow-x-auto">
-            <Table className="min-w-[900px]">
-              <TableHeader>
-                <TableRow className="bg-background/50 hover:bg-background/50">
-                  <TableHead>
-                    Data/Hora
-                  </TableHead>
+        <div className="md:hidden flex flex-col gap-3">
+  {filteredHistory.map((entry) => (
+    <div
+      key={entry.id}
+      className="rounded-2xl border border-border bg-card p-4"
+    >
+      <div className="flex justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-xl font-black break-words">
+            {entry.customer}
+          </h3>
 
-                  <TableHead>
-                    Cliente
-                  </TableHead>
+          <p className="text-xs text-muted-foreground font-mono mt-1">
+            {formatDate(entry.closedAt)}
+          </p>
+        </div>
 
-                  <TableHead>
-                    Itens
-                  </TableHead>
+        <p className="font-mono text-xl font-black text-primary shrink-0">
+          {formatCurrency(entry.total)}
+        </p>
+      </div>
 
-                  <TableHead>
-                    Pagamento
-                  </TableHead>
-
-                  <TableHead>
-                    Funcionário
-                  </TableHead>
-
-                  <TableHead className="text-right">
-                    Total
-                  </TableHead>
-
-                  <TableHead className="text-right">
-                    Ações
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {filteredHistory.map(
-                  (entry) => (
-                    <TableRow
-                      key={entry.id}
-                    >
-                      <TableCell className="font-mono text-sm text-muted-foreground">
-                        {formatDate(
-                          entry.closedAt,
-                        )}
-                      </TableCell>
-
-                      <TableCell className="font-bold text-lg">
-                        {entry.customer}
-                      </TableCell>
-
-                      <TableCell className="text-sm text-muted-foreground max-w-[280px]">
-                        <div className="flex flex-col gap-1">
-                          {entry.items.map(
-                            (
-                              item,
-                              index,
-                            ) => (
-                              <div
-                                key={`${item.name}-${index}`}
-                                className="truncate"
-                              >
-                                {item.qty}x{" "}
-                                {item.name}
-
-                                {item.addedBy ? (
-                                  <span className="opacity-70">
-                                    {" "}
-                                    — por{" "}
-                                    {
-                                      item.addedBy
-                                    }
-                                  </span>
-                                ) : null}
-                              </div>
-                            ),
-                          )}
-                        </div>
-                      </TableCell>
-
-                      <TableCell>
-                        <span
-                          className={`inline-block text-xs font-bold uppercase tracking-wider px-2 py-1 rounded border ${
-                            PAYMENT_COLORS[
-                              entry
-                                .paymentMethod
-                            ] ??
-                            "bg-muted text-muted-foreground border-border"
-                          }`}
-                        >
-                          {PAYMENT_LABELS[
-                            entry
-                              .paymentMethod
-                          ] ??
-                            entry.paymentMethod}
-                        </span>
-                      </TableCell>
-
-                      <TableCell className="text-sm text-muted-foreground">
-                        {entry.closedBy ??
-                          "-"}
-                      </TableCell>
-
-                      <TableCell className="text-right font-mono font-bold text-primary text-lg">
-                        {formatCurrency(
-                          entry.total,
-                        )}
-                      </TableCell>
-
-                      <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            handleReopen(
-                              entry.id,
-                              entry.customer,
-                            )
-                          }
-                        >
-                          <RotateCcw className="w-4 h-4 mr-2" />
-                          Reabrir
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ),
-                )}
-              </TableBody>
-            </Table>
+      <div className="mt-3 flex flex-col gap-1 text-sm text-muted-foreground">
+        {entry.items.map((item, index) => (
+          <div key={`${item.name}-${index}`}>
+            {item.qty}x {item.name}
+            {item.addedBy
+              ? ` — por ${item.addedBy}`
+              : ""}
           </div>
+        ))}
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <span
+          className={`inline-block text-xs font-bold uppercase tracking-wider px-2 py-1 rounded border ${
+            PAYMENT_COLORS[
+              entry.paymentMethod
+            ] ??
+            "bg-muted text-muted-foreground border-border"
+          }`}
+        >
+          {PAYMENT_LABELS[
+            entry.paymentMethod
+          ] ?? entry.paymentMethod}
+        </span>
+
+        <span className="text-xs text-muted-foreground">
+          {entry.closedBy ?? "-"}
+        </span>
+      </div>
+
+      <Button
+        variant="outline"
+        size="lg"
+        className="w-full mt-4 rounded-xl font-black"
+        onClick={() =>
+          handleReopen(
+            entry.id,
+            entry.customer,
+          )
+        }
+      >
+        <RotateCcw className="w-4 h-4 mr-2" />
+        Reabrir Comanda
+      </Button>
+    </div>
+  ))}
+</div>
+
+<div className="hidden md:block rounded-md border border-border overflow-hidden bg-card w-full overflow-x-auto">
+  <Table className="min-w-[900px]">
+    <TableHeader>
+      <TableRow className="bg-background/50 hover:bg-background/50">
+        <TableHead>Data/Hora</TableHead>
+        <TableHead>Cliente</TableHead>
+        <TableHead>Itens</TableHead>
+        <TableHead>Pagamento</TableHead>
+        <TableHead>Funcionário</TableHead>
+        <TableHead className="text-right">
+          Total
+        </TableHead>
+        <TableHead className="text-right">
+          Ações
+        </TableHead>
+      </TableRow>
+    </TableHeader>
+
+    <TableBody>
+      {filteredHistory.map((entry) => (
+        <TableRow key={entry.id}>
+          <TableCell className="font-mono text-sm text-muted-foreground">
+            {formatDate(entry.closedAt)}
+          </TableCell>
+
+          <TableCell className="font-bold text-lg">
+            {entry.customer}
+          </TableCell>
+
+          <TableCell className="text-sm text-muted-foreground max-w-[280px]">
+            <div className="flex flex-col gap-1">
+              {entry.items.map((item, index) => (
+                <div
+                  key={`${item.name}-${index}`}
+                  className="truncate"
+                >
+                  {item.qty}x {item.name}
+
+                  {item.addedBy ? (
+                    <span className="opacity-70">
+                      {" "}
+                      — por {item.addedBy}
+                    </span>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </TableCell>
+
+          <TableCell>
+            <span
+              className={`inline-block text-xs font-bold uppercase tracking-wider px-2 py-1 rounded border ${
+                PAYMENT_COLORS[
+                  entry.paymentMethod
+                ] ??
+                "bg-muted text-muted-foreground border-border"
+              }`}
+            >
+              {PAYMENT_LABELS[
+                entry.paymentMethod
+              ] ?? entry.paymentMethod}
+            </span>
+          </TableCell>
+
+          <TableCell className="text-sm text-muted-foreground">
+            {entry.closedBy ?? "-"}
+          </TableCell>
+
+          <TableCell className="text-right font-mono font-bold text-primary text-lg">
+            {formatCurrency(entry.total)}
+          </TableCell>
+
+          <TableCell className="text-right">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                handleReopen(
+                  entry.id,
+                  entry.customer,
+                )
+              }
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reabrir
+            </Button>
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+</div>
+  
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Receipt className="w-16 h-16 mb-4 opacity-20" />
