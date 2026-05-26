@@ -64,27 +64,18 @@ export default function HistoryPage() {
   const { toast } = useToast();
   const clearHistory = useClearHistory();
 
-  const [filter, setFilter] = useState<
-    "today" | "7d" | "30d" | "all"
-  >("today");
+  const [filter, setFilter] = useState<"today" | "7d" | "30d" | "all">("today");
 
   const filteredHistory = useMemo(() => {
     const now = new Date();
 
     return history.filter((entry) => {
       const closedDate = new Date(entry.closedAt);
-
-      const diffMs =
-        now.getTime() - closedDate.getTime();
-
-      const diffDays =
-        diffMs / (1000 * 60 * 60 * 24);
+      const diffMs = now.getTime() - closedDate.getTime();
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
       if (filter === "today") {
-        return (
-          closedDate.toDateString() ===
-          now.toDateString()
-        );
+        return closedDate.toDateString() === now.toDateString();
       }
 
       if (filter === "7d") {
@@ -108,8 +99,7 @@ export default function HistoryPage() {
 
         toast({
           title: "Histórico limpo",
-          description:
-            "Todas as comandas finalizadas foram apagadas.",
+          description: "Todas as comandas finalizadas foram apagadas.",
         });
       },
     });
@@ -136,27 +126,17 @@ export default function HistoryPage() {
 
     const rows = filteredHistory.map((entry) => [
       formatDate(entry.closedAt),
-
       entry.customer,
-
       entry.items
         .map(
           (item) =>
-            `${item.qty}x ${item.name} - R$ ${(
-              item.price * item.qty
-            ).toFixed(2)}${
-              item.addedBy
-                ? ` - Adicionado por: ${item.addedBy}`
-                : ""
+            `${item.qty}x ${item.name} - R$ ${(item.price * item.qty).toFixed(2)}${
+              item.addedBy ? ` - Adicionado por: ${item.addedBy}` : ""
             }`,
         )
         .join(" | "),
-
-      PAYMENT_LABELS[entry.paymentMethod] ??
-        entry.paymentMethod,
-
+      PAYMENT_LABELS[entry.paymentMethod] ?? entry.paymentMethod,
       entry.closedBy ?? "",
-
       entry.total.toFixed(2),
     ]);
 
@@ -164,62 +144,41 @@ export default function HistoryPage() {
       .map((row) => row.map(csvEscape).join(";"))
       .join("\n");
 
-    const blob = new Blob(
-      ["\ufeff" + csv],
-      {
-        type: "text/csv;charset=utf-8;",
-      },
-    );
+    const blob = new Blob(["\ufeff" + csv], {
+      type: "text/csv;charset=utf-8;",
+    });
 
-    const url =
-      URL.createObjectURL(blob);
-
-    const link =
-      document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
 
     link.href = url;
-
-    link.download = `historico-fm-bar-${new Date()
-      .toISOString()
-      .slice(0, 10)}.csv`;
+    link.download = `historico-fm-bar-${new Date().toISOString().slice(0, 10)}.csv`;
 
     document.body.appendChild(link);
-
     link.click();
-
     document.body.removeChild(link);
 
     URL.revokeObjectURL(url);
 
     toast({
       title: "Histórico exportado",
-      description:
-        "Arquivo CSV baixado com sucesso.",
+      description: "Arquivo CSV baixado com sucesso.",
     });
   };
 
-  const handleReopen = async (
-    id: string,
-    customer: string,
-  ) => {
-    const confirmed = window.confirm(
-      `Reabrir a comanda de ${customer}?`,
-    );
+  const handleReopen = async (id: string, customer: string) => {
+    const confirmed = window.confirm(`Reabrir a comanda de ${customer}?`);
 
     if (!confirmed) return;
 
-    const response = await fetch(
-      `${API_URL}/api/history/${id}/reopen`,
-      {
-        method: "POST",
-      },
-    );
+    const response = await fetch(`${API_URL}/api/history/${id}/reopen`, {
+      method: "POST",
+    });
 
     if (!response.ok) {
       toast({
         title: "Erro ao reabrir",
-        description:
-          "Não foi possível reabrir essa comanda.",
+        description: "Não foi possível reabrir essa comanda.",
       });
 
       return;
@@ -244,8 +203,8 @@ export default function HistoryPage() {
       <div className="p-3 md:p-6 border-b border-border bg-card flex flex-col gap-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-black uppercase tracking-wider text-primary flex items-center gap-3">
-              <Receipt className="w-8 h-8" />
+            <h1 className="text-2xl md:text-3xl font-black uppercase tracking-wider text-primary flex items-center gap-3">
+              <Receipt className="w-7 h-7 md:w-8 md:h-8" />
               Histórico
             </h1>
 
@@ -254,14 +213,13 @@ export default function HistoryPage() {
             </p>
           </div>
 
-          <div className="flex gap-2 shrink-0">
+          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto shrink-0">
             <Button
               variant="outline"
               size="sm"
-              disabled={
-                filteredHistory.length === 0
-              }
+              disabled={filteredHistory.length === 0}
               onClick={handleExportCsv}
+              className="w-full md:w-auto"
             >
               <Download className="w-4 h-4 mr-2" />
               Exportar CSV
@@ -272,12 +230,8 @@ export default function HistoryPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={
-                    filteredHistory.length ===
-                      0 ||
-                    clearHistory.isPending
-                  }
-                  className="border-destructive/40 text-destructive hover:bg-destructive/15 hover:text-destructive"
+                  disabled={filteredHistory.length === 0 || clearHistory.isPending}
+                  className="w-full md:w-auto border-destructive/40 text-destructive hover:bg-destructive/15 hover:text-destructive"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Limpar Histórico
@@ -291,10 +245,8 @@ export default function HistoryPage() {
                   </AlertDialogTitle>
 
                   <AlertDialogDescription>
-                    Essa ação vai apagar
-                    permanentemente todas as{" "}
-                    {filteredHistory.length}{" "}
-                    comandas finalizadas.
+                    Essa ação vai apagar permanentemente todas as{" "}
+                    {filteredHistory.length} comandas finalizadas.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
 
@@ -318,56 +270,32 @@ export default function HistoryPage() {
         <div className="flex gap-2 flex-wrap">
           <Button
             size="sm"
-            variant={
-              filter === "today"
-                ? "default"
-                : "outline"
-            }
-            onClick={() =>
-              setFilter("today")
-            }
+            variant={filter === "today" ? "default" : "outline"}
+            onClick={() => setFilter("today")}
           >
             Hoje
           </Button>
 
           <Button
             size="sm"
-            variant={
-              filter === "7d"
-                ? "default"
-                : "outline"
-            }
-            onClick={() =>
-              setFilter("7d")
-            }
+            variant={filter === "7d" ? "default" : "outline"}
+            onClick={() => setFilter("7d")}
           >
             7 dias
           </Button>
 
           <Button
             size="sm"
-            variant={
-              filter === "30d"
-                ? "default"
-                : "outline"
-            }
-            onClick={() =>
-              setFilter("30d")
-            }
+            variant={filter === "30d" ? "default" : "outline"}
+            onClick={() => setFilter("30d")}
           >
             30 dias
           </Button>
 
           <Button
             size="sm"
-            variant={
-              filter === "all"
-                ? "default"
-                : "outline"
-            }
-            onClick={() =>
-              setFilter("all")
-            }
+            variant={filter === "all" ? "default" : "outline"}
+            onClick={() => setFilter("all")}
           >
             Tudo
           </Button>
@@ -385,169 +313,151 @@ export default function HistoryPage() {
             ))}
           </div>
         ) : filteredHistory.length > 0 ? (
-        <div className="md:hidden flex flex-col gap-3">
-  {filteredHistory.map((entry) => (
-    <div
-      key={entry.id}
-      className="rounded-2xl border border-border bg-card p-4"
-    >
-      <div className="flex justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="text-xl font-black break-words">
-            {entry.customer}
-          </h3>
-
-          <p className="text-xs text-muted-foreground font-mono mt-1">
-            {formatDate(entry.closedAt)}
-          </p>
-        </div>
-
-        <p className="font-mono text-xl font-black text-primary shrink-0">
-          {formatCurrency(entry.total)}
-        </p>
-      </div>
-
-      <div className="mt-3 flex flex-col gap-1 text-sm text-muted-foreground">
-        {entry.items.map((item, index) => (
-          <div key={`${item.name}-${index}`}>
-            {item.qty}x {item.name}
-            {item.addedBy
-              ? ` — por ${item.addedBy}`
-              : ""}
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <span
-          className={`inline-block text-xs font-bold uppercase tracking-wider px-2 py-1 rounded border ${
-            PAYMENT_COLORS[
-              entry.paymentMethod
-            ] ??
-            "bg-muted text-muted-foreground border-border"
-          }`}
-        >
-          {PAYMENT_LABELS[
-            entry.paymentMethod
-          ] ?? entry.paymentMethod}
-        </span>
-
-        <span className="text-xs text-muted-foreground">
-          {entry.closedBy ?? "-"}
-        </span>
-      </div>
-
-      <Button
-        variant="outline"
-        size="lg"
-        className="w-full mt-4 rounded-xl font-black"
-        onClick={() =>
-          handleReopen(
-            entry.id,
-            entry.customer,
-          )
-        }
-      >
-        <RotateCcw className="w-4 h-4 mr-2" />
-        Reabrir Comanda
-      </Button>
-    </div>
-  ))}
-</div>
-
-<div className="hidden md:block rounded-md border border-border overflow-hidden bg-card w-full overflow-x-auto">
-  <Table className="min-w-[900px]">
-    <TableHeader>
-      <TableRow className="bg-background/50 hover:bg-background/50">
-        <TableHead>Data/Hora</TableHead>
-        <TableHead>Cliente</TableHead>
-        <TableHead>Itens</TableHead>
-        <TableHead>Pagamento</TableHead>
-        <TableHead>Funcionário</TableHead>
-        <TableHead className="text-right">
-          Total
-        </TableHead>
-        <TableHead className="text-right">
-          Ações
-        </TableHead>
-      </TableRow>
-    </TableHeader>
-
-    <TableBody>
-      {filteredHistory.map((entry) => (
-        <TableRow key={entry.id}>
-          <TableCell className="font-mono text-sm text-muted-foreground">
-            {formatDate(entry.closedAt)}
-          </TableCell>
-
-          <TableCell className="font-bold text-lg">
-            {entry.customer}
-          </TableCell>
-
-          <TableCell className="text-sm text-muted-foreground max-w-[280px]">
-            <div className="flex flex-col gap-1">
-              {entry.items.map((item, index) => (
+          <>
+            <div className="md:hidden flex flex-col gap-3">
+              {filteredHistory.map((entry) => (
                 <div
-                  key={`${item.name}-${index}`}
-                  className="truncate"
+                  key={entry.id}
+                  className="rounded-2xl border border-border bg-card p-4"
                 >
-                  {item.qty}x {item.name}
+                  <div className="flex justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-xl font-black break-words">
+                        {entry.customer}
+                      </h3>
 
-                  {item.addedBy ? (
-                    <span className="opacity-70">
-                      {" "}
-                      — por {item.addedBy}
+                      <p className="text-xs text-muted-foreground font-mono mt-1">
+                        {formatDate(entry.closedAt)}
+                      </p>
+                    </div>
+
+                    <p className="font-mono text-xl font-black text-primary shrink-0">
+                      {formatCurrency(entry.total)}
+                    </p>
+                  </div>
+
+                  <div className="mt-3 flex flex-col gap-1 text-sm text-muted-foreground">
+                    {entry.items.map((item, index) => (
+                      <div key={`${item.name}-${index}`}>
+                        {item.qty}x {item.name}
+                        {item.addedBy ? ` — por ${item.addedBy}` : ""}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <span
+                      className={`inline-block text-xs font-bold uppercase tracking-wider px-2 py-1 rounded border ${
+                        PAYMENT_COLORS[entry.paymentMethod] ??
+                        "bg-muted text-muted-foreground border-border"
+                      }`}
+                    >
+                      {PAYMENT_LABELS[entry.paymentMethod] ?? entry.paymentMethod}
                     </span>
-                  ) : null}
+
+                    <span className="text-xs text-muted-foreground">
+                      {entry.closedBy ?? "-"}
+                    </span>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="w-full mt-4 rounded-xl font-black"
+                    onClick={() => handleReopen(entry.id, entry.customer)}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Reabrir Comanda
+                  </Button>
                 </div>
               ))}
             </div>
-          </TableCell>
 
-          <TableCell>
-            <span
-              className={`inline-block text-xs font-bold uppercase tracking-wider px-2 py-1 rounded border ${
-                PAYMENT_COLORS[
-                  entry.paymentMethod
-                ] ??
-                "bg-muted text-muted-foreground border-border"
-              }`}
-            >
-              {PAYMENT_LABELS[
-                entry.paymentMethod
-              ] ?? entry.paymentMethod}
-            </span>
-          </TableCell>
+            <div className="hidden md:block rounded-md border border-border overflow-hidden bg-card w-full overflow-x-auto">
+              <Table className="min-w-[900px]">
+                <TableHeader>
+                  <TableRow className="bg-background/50 hover:bg-background/50">
+                    <TableHead>Data/Hora</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Itens</TableHead>
+                    <TableHead>Pagamento</TableHead>
+                    <TableHead>Funcionário</TableHead>
+                    <TableHead className="text-right">
+                      Total
+                    </TableHead>
+                    <TableHead className="text-right">
+                      Ações
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
 
-          <TableCell className="text-sm text-muted-foreground">
-            {entry.closedBy ?? "-"}
-          </TableCell>
+                <TableBody>
+                  {filteredHistory.map((entry) => (
+                    <TableRow key={entry.id}>
+                      <TableCell className="font-mono text-sm text-muted-foreground">
+                        {formatDate(entry.closedAt)}
+                      </TableCell>
 
-          <TableCell className="text-right font-mono font-bold text-primary text-lg">
-            {formatCurrency(entry.total)}
-          </TableCell>
+                      <TableCell className="font-bold text-lg">
+                        {entry.customer}
+                      </TableCell>
 
-          <TableCell className="text-right">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                handleReopen(
-                  entry.id,
-                  entry.customer,
-                )
-              }
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reabrir
-            </Button>
-          </TableCell>
-        </TableRow>
-      ))}
-    </TableBody>
-  </Table>
-</div>
-  
+                      <TableCell className="text-sm text-muted-foreground max-w-[280px]">
+                        <div className="flex flex-col gap-1">
+                          {entry.items.map((item, index) => (
+                            <div
+                              key={`${item.name}-${index}`}
+                              className="truncate"
+                            >
+                              {item.qty}x {item.name}
+
+                              {item.addedBy ? (
+                                <span className="opacity-70">
+                                  {" "}
+                                  — por {item.addedBy}
+                                </span>
+                              ) : null}
+                            </div>
+                          ))}
+                        </div>
+                      </TableCell>
+
+                      <TableCell>
+                        <span
+                          className={`inline-block text-xs font-bold uppercase tracking-wider px-2 py-1 rounded border ${
+                            PAYMENT_COLORS[entry.paymentMethod] ??
+                            "bg-muted text-muted-foreground border-border"
+                          }`}
+                        >
+                          {PAYMENT_LABELS[entry.paymentMethod] ??
+                            entry.paymentMethod}
+                        </span>
+                      </TableCell>
+
+                      <TableCell className="text-sm text-muted-foreground">
+                        {entry.closedBy ?? "-"}
+                      </TableCell>
+
+                      <TableCell className="text-right font-mono font-bold text-primary text-lg">
+                        {formatCurrency(entry.total)}
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleReopen(entry.id, entry.customer)}
+                        >
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          Reabrir
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Receipt className="w-16 h-16 mb-4 opacity-20" />
@@ -557,8 +467,7 @@ export default function HistoryPage() {
             </h2>
 
             <p>
-              Nenhuma comanda encontrada
-              neste filtro.
+              Nenhuma comanda encontrada neste filtro.
             </p>
           </div>
         )}
