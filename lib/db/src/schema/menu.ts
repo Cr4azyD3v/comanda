@@ -62,13 +62,19 @@ export const MENU_SEED = [
   { category: "Bebidas", name: "Suco Tial", price: 7 },
   { category: "Bebidas", name: "H2O", price: 7 },
   { category: "Bebidas", name: "Gatorade", price: 7 },
-
+   
   // DIVERSOS
   { category: "Diversos", name: "Cigarro", price: 2 },
+  { category: "Diversos", name: "3 Cigarros", price: 5 },
+
   { category: "Diversos", name: "Porto", price: 3 },
+  { category: "Diversos", name: "2 Portos", price: 5 },
+
   { category: "Diversos", name: "Pirulito", price: 1 },
   { category: "Diversos", name: "Halls", price: 5 },
   { category: "Diversos", name: "Trident", price: 5 },
+  { category: "Diversos", name: "Chiclete", price: 1 },
+
   { category: "Diversos", name: "Paçoca", price: 2 },
   { category: "Diversos", name: "Chocolate", price: 6 },
   { category: "Diversos", name: "Isqueiro", price: 5 },
