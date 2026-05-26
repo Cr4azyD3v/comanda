@@ -241,8 +241,8 @@ export default function HistoryPage() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <div className="p-6 border-b border-border bg-card flex flex-col gap-4">
-        <div className="flex items-start justify-between gap-4">
+      <div className="p-3 md:p-6 border-b border-border bg-card flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-black uppercase tracking-wider text-primary flex items-center gap-3">
               <Receipt className="w-8 h-8" />
@@ -374,7 +374,7 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-6">
+      <ScrollArea className="flex-1 p-3 md:p-6">
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3, 4].map((i) => (
@@ -385,8 +385,8 @@ export default function HistoryPage() {
             ))}
           </div>
         ) : filteredHistory.length > 0 ? (
-          <div className="rounded-md border border-border overflow-hidden bg-card">
-            <Table>
+          <div className="rounded-md border border-border overflow-hidden bg-card w-full overflow-x-auto">
+            <Table className="min-w-[900px]">
               <TableHeader>
                 <TableRow className="bg-background/50 hover:bg-background/50">
                   <TableHead>
